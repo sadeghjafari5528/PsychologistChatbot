@@ -1,2 +1,8 @@
 openai==0.28
 python-dotenv
+scikit-learn
+numpy
+matplotlib
+pandas
+torch
+transformers

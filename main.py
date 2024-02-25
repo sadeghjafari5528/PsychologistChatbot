@@ -6,7 +6,7 @@ import openai
 openai.api_key = config.OPENAI_API_KEY
 
 def main():
-    print(send_message(text=''))
+    print(send_message(message=''))
 
 if __name__ == '__main__':
     main()
