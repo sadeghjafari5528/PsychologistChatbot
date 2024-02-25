@@ -1,4 +1,4 @@
-from transformers import RobertaTokenizer, XLMRobertaTokenizer, XLMRobertaModel
+from transformers import XLMRobertaTokenizer, XLMRobertaModel
 
 from text_classification import load_data, split_data, to_tensor, main, TrainingConfig, plot_report
 
