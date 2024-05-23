@@ -2,16 +2,16 @@ import openai
 import time
 # import pandas as pd
 
-def send_message(message: str) -> str:
+def get_gpt_message(message: str, history: list) -> str:
     try:
-        messages = [ {"role": "system", "content":
-                "You are a intelligent assistant."} ]
+        # history = [ {"role": "system", "content":
+        #         "You are a intelligent assistant."} ]
 
-        messages.append(
+        history.append(
             {"role": "user", "content": message},
         )
         chat = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-0613", messages=messages
+            model="gpt-3.5-turbo-0613", messages=history
         )
         reply = chat.choices[0].message.content
         return True, reply
