@@ -48,6 +48,7 @@ label_dict = {
   'ANGRY': 5,
   'SAD': 6,
 }
+
 train_df = pd.read_table(f'{DATA_PATH}/train.tsv', header=None)
 train_df[1] = train_df[1].map(label_dict)
 train_texts, train_labels = train_df[0], train_df[1]
