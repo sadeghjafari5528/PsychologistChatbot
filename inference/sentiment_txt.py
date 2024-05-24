@@ -2,7 +2,7 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 import torch.nn.functional as F
 
-def load_model_and_tokenizer(model_name="erfanzare/sntiment_txt_classify"):
+def load_model_and_tokenizer(model_name="erfanzare/sentiment_v2"):
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     return model, tokenizer
@@ -30,7 +30,7 @@ def predict_labels(text, model, tokenizer, threshold=0.5):
     return final_labels
 
 model, tokenizer = load_model_and_tokenizer()
-text = "I'm so happy to see Erfan"
+text = "fuck you"
 labels = predict_labels(text, model, tokenizer)
 
 print(f"Predicted Labels: {labels}")
