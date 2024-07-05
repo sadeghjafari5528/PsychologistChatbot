@@ -7,6 +7,7 @@ import copy
 import openai
 
 from emotion.emotion_detection import load_emotion_detector_model_tokenizer, predict_emotion_label, predict_emotion_of_texts
+from message_validator.message_validator import load_validator_model_and_tokenizer, predict_validator_labels
 
 openai.api_key = config.OPENAI_API_KEY
 
@@ -43,6 +44,10 @@ def main():
             raise
 
 
-
 if __name__ == '__main__':
     main()
+    # model, tokenizer = load_validator_model_and_tokenizer()
+    # text = "We want to fuck Erfan"
+    # labels = predict_validator_labels(text, model, tokenizer)
+
+    # print(f"Predicted Labels: {labels}")
