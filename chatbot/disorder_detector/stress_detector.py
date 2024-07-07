@@ -17,7 +17,8 @@ def check_for_stress_in_text(input_text, stress_model_detc, stress_tokenizer_det
     with torch.no_grad():
         logits = stress_model_detc(**inputs).logits
     predicted_class_id = logits.argmax().item()
+    prob = torch.nn.functional.softmax(logits, dim=-1).max().item()
     output_label = stress_model_detc.config.id2label[predicted_class_id]
     if output_label == "LABEL_0":
-        return "Not Stressed"
-    return "Stressed"
+        return "Not Stressed", prob
+    return "Stressed", prob
