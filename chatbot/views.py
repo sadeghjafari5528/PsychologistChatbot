@@ -30,47 +30,20 @@ emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
 
-# def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
-#     current_time = timezone.now().timestamp()
+def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
+    weighted_average = dict()
 
-#     label_weighted_scores = {}
-#     label_total_weights = {}
+    for label in getattr(chats[0], feature).keys():
+        total_weight = 0
+        weighted_scores = list()
+        for chat in chats:
+            day_diff = (timezone.now() - chat.created_at).days
+            weight = np.exp(-decay_factor * day_diff)
+            weighted_scores.append(getattr(chat, feature)[label] * weight)
+            total_weight += weight
 
-#     for chat in chats:
-#         chat_time = chat.created_at().timestamp()
-#         time_diff = current_time - chat_time
-#         weight = np.exp(-decay_factor * time_diff)  # Exponential decay weight
-        
-#         if chat.label not in label_weighted_scores:
-#             label_weighted_scores[chat.label] = 0
-#             label_total_weights[chat.label] = 0
-
-#         label_weighted_scores[chat.label] += chat.score * weight
-#         label_total_weights[chat.label] += weight
-
-#     # Step 4: Calculate Weighted Average Scores
-#     label_weighted_averages = {
-#         label: label_weighted_scores[label] / label_total_weights[label]
-#         for label in label_weighted_scores
-#     }
-
-#     # Step 5: Determine the Max Weighted Average Score
-#     max_label = max(label_weighted_averages, key=label_weighted_averages.get)
-#     max_weighted_average_score = label_weighted_averages[max_label]
-# #-------------------------------------------------------------------------
-#     current_time = timezone.now().timestamp()
-#     weighted_scores = []
-#     total_weight = 0
-
-#     for chat in chats:
-#         chat_time = chat.created_at().timestamp()
-#         time_diff = current_time - chat_time
-#         weight = np.exp(-decay_factor * time_diff)
-#         weighted_scores.append(getattr(chat, feature) * weight)
-#         total_weight += weight
-
-#     weighted_average = sum(weighted_scores) / total_weight if total_weight != 0 else 0
-#     return weighted_average
+        weighted_average[label] = sum(weighted_scores) / total_weight if total_weight != 0 else 0
+    return weighted_average
 
 
 
@@ -83,12 +56,20 @@ def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
         messages.append({"role": "user", "content": chat.message})
         messages.append({"role": "system", "content": chat.response})
 
-    # average_emotion_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'emotion')
-    # average_disorder_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'disorder')
-    prompt = """
-Previous messages are the chat history between a paitient and a pychologist, 
+    average_emotion_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'emotion')
+    average_disorder_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'disorder')
+
+    prompt = f"""
+The previous messages are the chat history between a patient and a psychologist.
+Suppose you are a professional psychologist. Based on the following information,
+respond to the patient with a short message.(Prevent to say 'Hi' in each message.)
+
+Emotional status: {average_emotion_prob}
+Mental disorder status: {average_disorder_prob}
+Patient message: {chat_obj.message}
 """
-    messages.append({"role": "user", "content": chat_obj.message})
+    print(prompt)
+    messages.append({"role": "user", "content": prompt})
 
     response = openai.ChatCompletion.create(
         model = "gpt-4-turbo",
@@ -115,11 +96,9 @@ def chatbot(request):
         chat = Chat(
             user=request.user,
             message=message,
-            # response=response,
-            created_at=timezone.now,
+            created_at=timezone.now(),
             emotion=emotion,
             disorder=disorder,
-            # validation_label='',
         )
         for i in range(5):
             response = ask_openai(chat, chat_history=chats, window_size=20)
@@ -130,6 +109,7 @@ def chatbot(request):
             )
             if len(validation) == 0:
                 break
+            print(validation)
 
         chat.validation = validation
         chat.response = response
