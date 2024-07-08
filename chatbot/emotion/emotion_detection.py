@@ -31,12 +31,8 @@ def predict_emotion_label(text, model, tokenizer):
     
     # Get the logits and predict the label
     logits = outputs.logits
-    predicted_label = torch.argmax(logits, dim=-1).item()
-    
-    # Get the final label
-    final_label = label_dict[predicted_label]
-    prob = torch.nn.functional.softmax(logits, dim=-1).max().item()
-    return final_label, prob
+    prob_logits = torch.nn.functional.softmax(logits, dim=-1)
+    return {label: prob.item() for label, prob in zip(label_dict.values(), prob_logits[0])}
 
 
 def predict_emotion_of_texts(texts: list, model, tokenizer, max_length=128):
