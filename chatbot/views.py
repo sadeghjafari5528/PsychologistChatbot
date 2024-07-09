@@ -62,7 +62,7 @@ def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
     prompt = f"""
 The previous messages are the chat history between a patient and a psychologist.
 Suppose you are a professional psychologist. Based on the following information,
-respond to the patient with a short message.(Prevent to say 'Hi' in each message.)
+respond to the patient with a short message.(Prevent to say 'Hi' in each message. And only speak in persian)
 
 Emotional status: {average_emotion_prob}
 Mental disorder status: {average_disorder_prob}
