@@ -1,24 +1,23 @@
-from datetime import datetime
+import datetime
 import numpy as np
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.utils import timezone
-
+from django.utils import timezone,dateformat
 import openai
 
 from django.contrib import auth
 from django.contrib.auth.models import User
-from .models import Chat
-
-
+from .models import Chat, Question, Questionnaire
 
 from chatbot.disorder_detector.stress_detector import check_for_stress_in_text, load_stress_detector_model_tokenizer
-from chatbot.emotion.emotion_detection import load_emotion_detector_model_tokenizer, predict_emotion_label, predict_emotion_of_texts
+from chatbot.emotion.emotion_detection import load_emotion_detector_model_tokenizer, predict_emotion_label, \
+    predict_emotion_of_texts
 from chatbot.message_validator.message_validator import load_validator_model_and_tokenizer, predict_validator_labels
 
 from dotenv import load_dotenv
 import os
+
 load_dotenv()
 
 openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -29,6 +28,7 @@ validator_model, validator_tokenizer = load_validator_model_and_tokenizer()
 emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
+count_q = 0
 
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
     weighted_average = dict()
@@ -46,11 +46,10 @@ def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: fl
     return weighted_average
 
 
-
 def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
     if window_size:
         chat_history = chat_history.order_by('-id')[:window_size]
-    
+
     messages = list()
     for chat in chat_history:
         messages.append({"role": "user", "content": chat.message})
@@ -72,7 +71,7 @@ Patient message: {chat_obj.message}
     messages.append({"role": "user", "content": prompt})
 
     response = openai.ChatCompletion.create(
-        model = "gpt-4-turbo",
+        model="gpt-4-turbo",
         # prompt = message,
         # max_tokens=150,
         # n=1,
@@ -82,44 +81,130 @@ Patient message: {chat_obj.message}
     )
     answer = response.choices[0].message.content.strip()
     return answer
+def gad_7_questions():
+    return [
+        "در طول دو هفته گذشته، چند بار احساس کردید که عصبی، نگران یا بی‌قرار هستید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار قادر نبودید،اضطراب یا نگرانی‌های خود را کنترل کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که نتوانسته‌اید روی چیزهای دیگر تمرکز کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که نتوانسته‌اید آرام باشید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید کارهایتان به کندی پیش می‌روند؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید باید دائماً حرکت کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که خوابیدن برایتان مشکل شده است؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+    ]
 
-# Create your views here.
+def phq_9_questions():
+    return [
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که علاقه یا لذتی به فعالیت‌هایی که معمولاً از آنها لذت می‌بردید، ندارید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که افسرده، غمگین یا ناامید هستید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار با مشکل در خوابیدن، خواب زیاد یا بیدار شدن در نیمه‌شب مواجه بوده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس خستگی یا کمبود انرژی داشته‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار اشتهای شما کاهش یا افزایش یافته است؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که خود را یک شکست‌خورده می‌دانید یا احساس کرده‌اید که خود یا خانواده‌تان را ناامید کرده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار با مشکل تمرکز کردن بر روی چیزهایی مثل خواندن روزنامه یا تماشای تلویزیون مواجه بوده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار حرکت یا صحبت شما به قدری کند بوده است که دیگران متوجه آن شده‌اند؟ یا برعکس، چند بار به قدری بی‌قرار بوده‌اید که نمی‌توانستید آرام بنشینید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که بهتر است خودتان را آسیب بزنید یا خودکشی کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+    ]
 
 def chatbot(request):
-    chats = Chat.objects.filter(user=request.user)
+    user = request.user
+    if not user.is_authenticated:
+        return redirect('login')  # Ensure the user is logged in
 
+    # Get or create today's question record for the user
+    today = timezone.now().date()
+    question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
 
     if request.method == 'POST':
         message = request.POST.get('message')
+
+        # Determine whether to continue with GAD-7 or PHQ-9
+        if not question_record.gad_7_completed:
+            questions = gad_7_questions()
+            if question_record.gad_7_count < len(questions):
+                current_question = questions[question_record.gad_7_count]
+                question_record.gad_7_count += 1
+                question_record.save()
+
+                # Save the user's answer
+                Questionnaire.objects.create(
+                    user=user,
+                    created_at=timezone.now(),
+                    question=current_question,
+                    answer=message,
+                    gad_7_number=question_record.gad_7_count,
+                    is_gad_7=True,
+                    is_phq_9=False
+                )
+
+                if question_record.gad_7_count == len(questions):
+                    question_record.gad_7_completed = True
+                    question_record.save()
+                    return JsonResponse({'message': message, 'response': 'Thank you for completing the GAD-7 questionnaire. We will now proceed with the PHQ-9 questionnaire.'})
+
+                return JsonResponse({'message': message, 'response': current_question})
+
+            question_record.gad_7_completed = True
+            question_record.save()
+
+        if not question_record.phq_9_completed:
+            questions = phq_9_questions()
+            if question_record.phq_9_count < len(questions):
+                current_question = questions[question_record.phq_9_count]
+                question_record.phq_9_count += 1
+                question_record.save()
+
+                # Save the user's answer
+                Questionnaire.objects.create(
+                    user=user,
+                    created_at=timezone.now(),
+                    question=current_question,
+                    answer=message,
+                    phq_9_number=question_record.phq_9_count,
+                    is_gad_7=False,
+                    is_phq_9=True
+                )
+
+                if question_record.phq_9_count == len(questions):
+                    question_record.phq_9_completed = True
+                    question_record.save()
+                    return JsonResponse({'message': message, 'response': 'Thank you for completing the PHQ-9 questionnaire. Now, we will resume the regular chat.'})
+
+                return JsonResponse({'message': message, 'response': current_question})
+
+            question_record.phq_9_completed = True
+            question_record.save()
+
+        # Regular chat
+        chats = Chat.objects.filter(user=user)
         disorder = check_for_stress_in_text(message, disorder_model, disorder_tokenizer)
         emotion = predict_emotion_label(message, emotion_model, emotion_tokenizer)
         chat = Chat(
-            user=request.user,
+            user=user,
             message=message,
             created_at=timezone.now(),
             emotion=emotion,
             disorder=disorder,
+            gad_7=False,
+            phq_9=False,
         )
-        for i in range(5):
+
+        for _ in range(5):
             response = ask_openai(chat, chat_history=chats, window_size=20)
-            validation = predict_validator_labels(
-                response,
-                validator_model,
-                validator_tokenizer
-            )
-            if len(validation) == 0:
+            validation = predict_validator_labels(response, validator_model, validator_tokenizer)
+            if not validation:
                 break
-            print(validation)
 
         chat.validation = validation
         chat.response = response
         chat.save()
         return JsonResponse({'message': message, 'response': response})
-    return render(request, 'chatbot.html', {'chats': chats})
+
+    return render(request, 'chatbot.html', {'chats': Chat.objects.filter(user=user)})
+
 
 
 def login(request):
-    if request.method=='POST':
+    if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
         user = auth.authenticate(request, username=username, password=password)
@@ -132,6 +217,7 @@ def login(request):
     else:
         return render(request, 'login.html')
 
+
 def register(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -139,7 +225,7 @@ def register(request):
         password1 = request.POST['password1']
         password2 = request.POST['password2']
 
-        if password1==password2:
+        if password1 == password2:
             try:
                 user = User.objects.create_user(username, email, password1)
                 user.save()
@@ -149,9 +235,10 @@ def register(request):
                 error_message = 'Error creating account'
             return render(request, 'register.html', {'error_message': error_message})
         else:
-            error_message = "Password don't match" 
+            error_message = "Password don't match"
             return render(request, 'register.html', {'error_message': error_message})
     return render(request, 'register.html')
+
 
 def logout(request):
     auth.logout(request)
