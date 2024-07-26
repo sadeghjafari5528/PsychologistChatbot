@@ -108,16 +108,14 @@ def phq_9_questions():
 def chatbot(request):
     user = request.user
     if not user.is_authenticated:
-        return redirect('login')  # Ensure the user is logged in
+        return redirect('login')
 
-    # Get or create today's question record for the user
     today = timezone.now().date()
     question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
 
     if request.method == 'POST':
         message = request.POST.get('message')
 
-        # Determine whether to continue with GAD-7 or PHQ-9
         if not question_record.gad_7_completed:
             questions = gad_7_questions()
             if question_record.gad_7_count < len(questions):
@@ -125,7 +123,6 @@ def chatbot(request):
                 question_record.gad_7_count += 1
                 question_record.save()
 
-                # Save the user's answer
                 Questionnaire.objects.create(
                     user=user,
                     created_at=timezone.now(),
@@ -153,7 +150,6 @@ def chatbot(request):
                 question_record.phq_9_count += 1
                 question_record.save()
 
-                # Save the user's answer
                 Questionnaire.objects.create(
                     user=user,
                     created_at=timezone.now(),
@@ -174,7 +170,6 @@ def chatbot(request):
             question_record.phq_9_completed = True
             question_record.save()
 
-        # Regular chat
         chats = Chat.objects.filter(user=user)
         disorder = check_for_stress_in_text(message, disorder_model, disorder_tokenizer)
         emotion = predict_emotion_label(message, emotion_model, emotion_tokenizer)
