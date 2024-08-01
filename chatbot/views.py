@@ -18,6 +18,10 @@ from chatbot.message_validator.message_validator import load_validator_model_and
 from dotenv import load_dotenv
 import os
 
+
+
+
+
 load_dotenv()
 
 openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -83,27 +87,28 @@ Patient message: {chat_obj.message}
     return answer
 def gad_7_questions():
     return [
-        "در طول دو هفته گذشته، چند بار احساس کردید که عصبی، نگران یا بی‌قرار هستید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار قادر نبودید،اضطراب یا نگرانی‌های خود را کنترل کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که نتوانسته‌اید روی چیزهای دیگر تمرکز کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که نتوانسته‌اید آرام باشید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید کارهایتان به کندی پیش می‌روند؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید باید دائماً حرکت کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که خوابیدن برایتان مشکل شده است؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس کردید که عصبی، نگران یا بی‌قرار هستید؟    \n عدد گزینه را واردکنید :               گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز",
+        "در طول دو هفته گذشته، چند بار قادر نبودید،اضطراب یا نگرانی‌های خود را کنترل کنید ؟    \n عدد گزینه را واردکنید :               گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز ",
+        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که نتوانسته‌اید روی چیزهای دیگر تمرکز کنید  \n عدد گزینه را واردکنید :               گزینه (0 هرگز      گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز    ",
+        "در طول دو هفته گذشته،  چند بار به قدری عصبی  بوده ‌اید که نتوانسته ‌اید آرام باشید ؟        \n  عدد گزینه را واردکنید :         گزینه (0 هرگز،       گزینه (1 چندروز،             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز ",
+        " در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید کارهایتان به کندی پیش می‌روند؟  \n   عدد گزینه را واردکنید :     گزینه (0 هرگز،       گزینه (1 چندروز،             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز  ",
+        "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید باید دائماً حرکت کنید؟      \n عدد گزینه را واردکنید :               گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز  ",
+        "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که خوابیدن برایتان مشکل شده است؟         \n عدد گزینه را واردکنید :               گزینه (0 هرگز      گزینه (1 چندروز            گزینه (2 بیش از نصف روز ه               گزینه  (3 تقریبا هرروز   ",
     ]
 
 def phq_9_questions():
     return [
-        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که علاقه یا لذتی به فعالیت‌هایی که معمولاً از آنها لذت می‌بردید، ندارید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که افسرده، غمگین یا ناامید هستید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار با مشکل در خوابیدن، خواب زیاد یا بیدار شدن در نیمه‌شب مواجه بوده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار احساس خستگی یا کمبود انرژی داشته‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار اشتهای شما کاهش یا افزایش یافته است؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که خود را یک شکست‌خورده می‌دانید یا احساس کرده‌اید که خود یا خانواده‌تان را ناامید کرده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار با مشکل تمرکز کردن بر روی چیزهایی مثل خواندن روزنامه یا تماشای تلویزیون مواجه بوده‌اید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار حرکت یا صحبت شما به قدری کند بوده است که دیگران متوجه آن شده‌اند؟ یا برعکس، چند بار به قدری بی‌قرار بوده‌اید که نمی‌توانستید آرام بنشینید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
-        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که بهتر است خودتان را آسیب بزنید یا خودکشی کنید؟    \n عدد گزینه را واردکنید.گزینه 0هرگز،گزینه1 چندروز،گزینه 2بیش از نصف روز ها،گزینه 3 تفریبا هرروز",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که علاقه یا لذتی به فعالیت‌هایی که معمولاً از آنها لذت می‌بردید، ندارید؟     \n     عدد گزینه را واردکنید :                  گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز   ",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که افسرده، غمگین یا ناامید هستید       \n     عدد گزینه را واردکنید :                  گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز    ",
+        "در طول دو هفته گذشته، چند بار با مشکل در خوابیدن، خواب زیاد یا بیدار شدن در نیمه‌شب مواجه بوده‌اید؟     \n     عدد گزینه را واردکنید :         گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز    ",
+        "در طول دو هفته گذشته، چند بار احساس خستگی یا کمبود انرژی داشته‌اید؟     \n     عدد گزینه را واردکنید :    گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز    ",
+        "در طول دو هفته گذشته، چند بار اشتهای شما کاهش یا افزایش یافته است؟     \n عدد گزینه را واردکنید :   گزینه (0 هرگز               گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز   ",
+        "در طول دو هفته گذشته، چند بار احساس کرده‌اید که خود را یک شکست‌خورده می‌دانید یا احساس کرده‌اید که خود یا خانواده‌تان را ناامید کرده‌اید؟       \n     عدد گزینه را واردکنید :           گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز    ",
+        "در طول دو هفته گذشته، چند بار با مشکل تمرکز کردن بر روی چیزهایی مثل خواندن روزنامه یا تماشای تلویزیون مواجه بوده‌اید؟ \n    عدد گزینه را واردکنید :  گزینه (0 هرگز    گزینه (1 چندروز    گزینه (2 بیش از نصف روزها    گزینه  (3 تقریبا هرروز  ",
+        "در طول دو هفته گذشته، چند بار حرکت یا صحبت شما به قدری کند بوده است که دیگران متوجه آن شده‌اند؟ یا برعکس، چند بار به قدری بی‌قرار بوده‌اید که نمی‌توانستید آرام بنشینید؟   \n   عدد گزینه را واردکنید :    گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روزها      گزینه  (3 تقریبا هرروز        ",
+        " در طول دو هفته گذشته، چند بار احساس کرده‌اید که بهتر است خودتان را آسیب بزنید یا خودکشی کنید؟   \nعدد گزینه را واردکنید :                  گزینه (0 هرگز       گزینه (1 چندروز         گزینه (2 بیش از نصف روزها         گزینه  (3 تقریبا هرروز   ",
     ]
+
 
 def chatbot(request):
     user = request.user
@@ -116,60 +121,119 @@ def chatbot(request):
     if request.method == 'POST':
         message = request.POST.get('message')
 
+        # Check if the user has just logged in and no question has been asked yet
+        if question_record.gad_7_count == 0 and not question_record.gad_7_completed and not question_record.phq_9_completed:
+            first_question = gad_7_questions()[0]
+            Questionnaire.objects.create(
+                user=user,
+                created_at=timezone.now(),
+                question=first_question,
+                answer='',
+                gad_7_number=1,
+                is_gad_7=True,
+                is_phq_9=False
+            )
+            question_record.gad_7_count += 1
+            question_record.save()
+            return JsonResponse({'response': first_question})
+
+        # Determine if we're in the middle of a questionnaire and need to save the previous answer
+        if (question_record.gad_7_count > 0 and not question_record.gad_7_completed) or (question_record.gad_7_count==7 and  question_record.phq_9_count==0):
+            try:
+                last_questionnaire_entry = Questionnaire.objects.get(
+                    user=user,
+                    gad_7_number=question_record.gad_7_count,
+                    is_gad_7=True,
+                    is_phq_9=False
+                )
+                if last_questionnaire_entry.answer == '':
+                    last_questionnaire_entry.answer = message
+                    last_questionnaire_entry.save()
+            except Questionnaire.DoesNotExist:
+                pass
+
+        elif question_record.phq_9_count > 0 and not question_record.phq_9_completed:
+            try:
+                last_questionnaire_entry = Questionnaire.objects.get(
+                    user=user,
+                    phq_9_number=question_record.phq_9_count,
+                    is_gad_7=False,
+                    is_phq_9=True
+                )
+                if last_questionnaire_entry.answer == '':
+                    last_questionnaire_entry.answer = message
+                    last_questionnaire_entry.save()
+            except Questionnaire.DoesNotExist:
+                pass
+
         if not question_record.gad_7_completed:
             questions = gad_7_questions()
-            if question_record.gad_7_count < len(questions):
-                current_question = questions[question_record.gad_7_count]
-                question_record.gad_7_count += 1
-                question_record.save()
+            if question_record.gad_7_count <= len(questions):
+                if  question_record.gad_7_count < len(questions):
+                    current_question = questions[question_record.gad_7_count]
 
-                Questionnaire.objects.create(
+                    Questionnaire.objects.create(
+                        user=user,
+                        created_at=timezone.now(),
+                        question=current_question,
+                        answer='',
+                        gad_7_number=question_record.gad_7_count + 1,
+                        is_gad_7=True,
+                        is_phq_9=False
+                    )
+                if question_record.gad_7_count <7:
+                    question_record.gad_7_count += 1
+                    question_record.save()
+
+                last_questionnaire_entry = Questionnaire.objects.get(
                     user=user,
-                    created_at=timezone.now(),
-                    question=current_question,
-                    answer=message,
                     gad_7_number=question_record.gad_7_count,
                     is_gad_7=True,
                     is_phq_9=False
                 )
 
-                if question_record.gad_7_count == len(questions):
+                if question_record.gad_7_count == len(questions) and not last_questionnaire_entry.answer == '' :
                     question_record.gad_7_completed = True
                     question_record.save()
-                    return JsonResponse({'message': message, 'response': 'Thank you for completing the GAD-7 questionnaire. We will now proceed with the PHQ-9 questionnaire.'})
+                    return JsonResponse({'message': message,
+                                         'response': 'Thank you for completing the GAD-7 questionnaire. We will now proceed with the PHQ-9 questionnaire.'})
 
                 return JsonResponse({'message': message, 'response': current_question})
 
-            question_record.gad_7_completed = True
-            question_record.save()
-
         if not question_record.phq_9_completed:
             questions = phq_9_questions()
-            if question_record.phq_9_count < len(questions):
+            if question_record.phq_9_count <= len(questions):
                 current_question = questions[question_record.phq_9_count]
-                question_record.phq_9_count += 1
-                question_record.save()
+                if question_record.phq_9_count < len(questions):
 
-                Questionnaire.objects.create(
+                    Questionnaire.objects.create(
+                        user=user,
+                        created_at=timezone.now(),
+                        question=current_question,
+                        answer='',
+                        phq_9_number=question_record.phq_9_count + 1,
+                        is_gad_7=False,
+                        is_phq_9=True
+                    )
+
+                    question_record.phq_9_count += 1
+                    question_record.save()
+
+                last_questionnaire_entry = Questionnaire.objects.get(
                     user=user,
-                    created_at=timezone.now(),
-                    question=current_question,
-                    answer=message,
                     phq_9_number=question_record.phq_9_count,
                     is_gad_7=False,
                     is_phq_9=True
                 )
-
-                if question_record.phq_9_count == len(questions):
+                if question_record.phq_9_count == len(questions) and not last_questionnaire_entry.answer == '':
                     question_record.phq_9_completed = True
                     question_record.save()
-                    return JsonResponse({'message': message, 'response': 'Thank you for completing the PHQ-9 questionnaire. Now, we will resume the regular chat.'})
+                    return JsonResponse({'message': message,
+                                         'response': 'Thank you for completing the PHQ-9 questionnaire. Now, we will resume the regular chat.'})
 
                 return JsonResponse({'message': message, 'response': current_question})
 
-            question_record.phq_9_completed = True
-            question_record.save()
-
+        # Regular chat processing
         chats = Chat.objects.filter(user=user)
         disorder = check_for_stress_in_text(message, disorder_model, disorder_tokenizer)
         emotion = predict_emotion_label(message, emotion_model, emotion_tokenizer)
@@ -195,7 +259,6 @@ def chatbot(request):
         return JsonResponse({'message': message, 'response': response})
 
     return render(request, 'chatbot.html', {'chats': Chat.objects.filter(user=user)})
-
 
 
 def login(request):

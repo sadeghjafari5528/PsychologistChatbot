@@ -31,7 +31,7 @@ class Questionnaire(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     question = models.TextField()
-    answer = models.TextField()
+    answer = models.TextField(blank=True)
     gad_7_number = models.IntegerField(default=0)
     phq_9_number = models.IntegerField(default=0)
     is_gad_7 = models.BooleanField(default=False)
