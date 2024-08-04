@@ -3,7 +3,7 @@ import numpy as np
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.utils import timezone,dateformat
+from django.utils import timezone, dateformat
 import openai
 
 from django.contrib import auth
@@ -18,10 +18,6 @@ from chatbot.message_validator.message_validator import load_validator_model_and
 from dotenv import load_dotenv
 import os
 
-
-
-
-
 load_dotenv()
 
 openai_api_key = os.getenv('OPENAI_API_KEY')
@@ -33,6 +29,7 @@ emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
 count_q = 0
+
 
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
     weighted_average = dict()
@@ -85,6 +82,8 @@ Patient message: {chat_obj.message}
     )
     answer = response.choices[0].message.content.strip()
     return answer
+
+
 def gad_7_questions():
     return [
         "در طول دو هفته گذشته، چند بار احساس کردید که عصبی، نگران یا بی‌قرار هستید؟    \n عدد گزینه را واردکنید :               گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز",
@@ -95,6 +94,7 @@ def gad_7_questions():
         "در طول دو هفته گذشته، چند بار به قدری نگران بوده‌اید که احساس کرده‌اید باید دائماً حرکت کنید؟      \n عدد گزینه را واردکنید :               گزینه (0 هرگز       گزینه (1 چندروز             گزینه (2 بیش از نصف روز ها            گزینه  (3 تقریبا هرروز  ",
         "در طول دو هفته گذشته، چند بار به قدری عصبی بوده‌اید که خوابیدن برایتان مشکل شده است؟         \n عدد گزینه را واردکنید :               گزینه (0 هرگز      گزینه (1 چندروز            گزینه (2 بیش از نصف روز ه               گزینه  (3 تقریبا هرروز   ",
     ]
+
 
 def phq_9_questions():
     return [
@@ -138,14 +138,18 @@ def chatbot(request):
             return JsonResponse({'response': first_question})
 
         # Determine if we're in the middle of a questionnaire and need to save the previous answer
-        if (question_record.gad_7_count > 0 and not question_record.gad_7_completed) or (question_record.gad_7_count==7 and  question_record.phq_9_count==0):
+        if (question_record.gad_7_count > 0 and not question_record.gad_7_completed) or (
+                question_record.gad_7_count == 7 and question_record.phq_9_count == 0):
             try:
-                last_questionnaire_entry = Questionnaire.objects.get(
+                last_questionnaire_entry = Questionnaire.objects.filter(
                     user=user,
                     gad_7_number=question_record.gad_7_count,
                     is_gad_7=True,
                     is_phq_9=False
-                )
+                ).order_by('created_at').last()
+
+                # last_questionnaire_entry = last_questionnaire_entry.iloc[-1]
+
                 if last_questionnaire_entry.answer == '':
                     last_questionnaire_entry.answer = message
                     last_questionnaire_entry.save()
@@ -154,12 +158,15 @@ def chatbot(request):
 
         elif question_record.phq_9_count > 0 and not question_record.phq_9_completed:
             try:
-                last_questionnaire_entry = Questionnaire.objects.get(
+                last_questionnaire_entry = Questionnaire.objects.filter(
                     user=user,
                     phq_9_number=question_record.phq_9_count,
                     is_gad_7=False,
                     is_phq_9=True
-                )
+                ).order_by('-created_at').last()
+
+                # last_questionnaire_entry = last_questionnaire_entry[-1]
+
                 if last_questionnaire_entry.answer == '':
                     last_questionnaire_entry.answer = message
                     last_questionnaire_entry.save()
@@ -169,7 +176,7 @@ def chatbot(request):
         if not question_record.gad_7_completed:
             questions = gad_7_questions()
             if question_record.gad_7_count <= len(questions):
-                if  question_record.gad_7_count < len(questions):
+                if question_record.gad_7_count < len(questions):
                     current_question = questions[question_record.gad_7_count]
 
                     Questionnaire.objects.create(
@@ -181,18 +188,20 @@ def chatbot(request):
                         is_gad_7=True,
                         is_phq_9=False
                     )
-                if question_record.gad_7_count <7:
+                if question_record.gad_7_count < 7:
                     question_record.gad_7_count += 1
                     question_record.save()
 
-                last_questionnaire_entry = Questionnaire.objects.get(
+                last_questionnaire_entry = Questionnaire.objects.filter(
                     user=user,
                     gad_7_number=question_record.gad_7_count,
                     is_gad_7=True,
                     is_phq_9=False
-                )
+                ).order_by('-created_at').last()
 
-                if question_record.gad_7_count == len(questions) and not last_questionnaire_entry.answer == '' :
+                # last_questionnaire_entry = last_questionnaire_entry[-1]
+
+                if question_record.gad_7_count == len(questions) and not last_questionnaire_entry.answer == '':
                     question_record.gad_7_completed = True
                     question_record.save()
                     return JsonResponse({'message': message,
@@ -203,9 +212,8 @@ def chatbot(request):
         if not question_record.phq_9_completed:
             questions = phq_9_questions()
             if question_record.phq_9_count <= len(questions):
-                current_question = questions[question_record.phq_9_count]
                 if question_record.phq_9_count < len(questions):
-
+                    current_question = questions[question_record.phq_9_count]
                     Questionnaire.objects.create(
                         user=user,
                         created_at=timezone.now(),
@@ -219,12 +227,15 @@ def chatbot(request):
                     question_record.phq_9_count += 1
                     question_record.save()
 
-                last_questionnaire_entry = Questionnaire.objects.get(
+                last_questionnaire_entry = Questionnaire.objects.filter(
                     user=user,
                     phq_9_number=question_record.phq_9_count,
                     is_gad_7=False,
                     is_phq_9=True
-                )
+                ).order_by('-created_at').last()
+
+                # last_questionnaire_entry = last_questionnaire_entry[-1]
+
                 if question_record.phq_9_count == len(questions) and not last_questionnaire_entry.answer == '':
                     question_record.phq_9_completed = True
                     question_record.save()
