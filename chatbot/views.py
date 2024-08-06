@@ -1,4 +1,6 @@
 import datetime
+import sys
+
 import numpy as np
 
 from django.shortcuts import render, redirect
@@ -160,7 +162,7 @@ def chatbot(request):
                     phq_9_number=question_record.phq_9_count,
                     is_gad_7=False,
                     is_phq_9=True
-                ).order_by('-created_at').last()
+                ).order_by('created_at').last()
 
 
                 if last_questionnaire_entry.answer == '':
@@ -193,10 +195,10 @@ def chatbot(request):
                     gad_7_number=question_record.gad_7_count,
                     is_gad_7=True,
                     is_phq_9=False
-                ).order_by('-created_at').last()
+                ).order_by('created_at').last()
 
+                if question_record.gad_7_count == len(questions) and not (last_questionnaire_entry.answer == ''):
 
-                if question_record.gad_7_count == len(questions) and not last_questionnaire_entry.answer == '':
                     question_record.gad_7_completed = True
                     question_record.save()
                     return JsonResponse({'message': message,
@@ -226,10 +228,10 @@ def chatbot(request):
                     phq_9_number=question_record.phq_9_count,
                     is_gad_7=False,
                     is_phq_9=True
-                ).order_by('-created_at').last()
+                ).order_by('created_at').last()
 
 
-                if question_record.phq_9_count == len(questions) and not last_questionnaire_entry.answer == '':
+                if question_record.phq_9_count == len(questions) and not (last_questionnaire_entry.answer == ''):
                     question_record.phq_9_completed = True
                     question_record.save()
                     return JsonResponse({'message': message,
