@@ -3,6 +3,8 @@ import sys
 
 import numpy as np
 
+import logging
+
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.utils import timezone, dateformat
@@ -31,6 +33,8 @@ emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
 count_q = 0
+
+logger = logging.getLogger('django')
 
 
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
@@ -116,6 +120,7 @@ def chatbot(request):
     user = request.user
     if not user.is_authenticated:
         return redirect('login')
+
 
     today = timezone.now().date()
     question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
@@ -258,6 +263,7 @@ def chatbot(request):
             validation = predict_validator_labels(response, validator_model, validator_tokenizer)
             if not validation:
                 break
+            logger.info(f"Response-text:{response}\nvalidation list:{validation}\n ")
 
         chat.validation = validation
         chat.response = response
