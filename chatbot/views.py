@@ -24,15 +24,11 @@ import os
 
 load_dotenv()
 
-openai_api_key = os.getenv('OPENAI_API_KEY')
-print('openai_api_key', openai_api_key)
-openai.api_key = openai_api_key
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 validator_model, validator_tokenizer = load_validator_model_and_tokenizer()
 emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
-
-count_q = 0
 
 logger = logging.getLogger('django')
 

@@ -17,6 +17,7 @@ class Chat(models.Model):
 
 class Question(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    is_validator = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     gad_7_count = models.IntegerField(default=0)
     phq_9_count = models.IntegerField(default=0)
