@@ -123,122 +123,122 @@ def chatbot(request):
 
     if request.method == 'POST':
         message = request.POST.get('message')
-
-        if question_record.gad_7_count == 0 and not question_record.gad_7_completed and not question_record.phq_9_completed:
-            first_question = gad_7_questions()[0]
-            Questionnaire.objects.create(
-                user=user,
-                created_at=timezone.now(),
-                question=first_question,
-                answer='',
-                gad_7_number=1,
-                is_gad_7=True,
-                is_phq_9=False
-            )
-            question_record.gad_7_count += 1
-            question_record.save()
-            return JsonResponse({'response': first_question})
-
-        if (question_record.gad_7_count > 0 and not question_record.gad_7_completed) or (
-                question_record.gad_7_count == 7 and question_record.phq_9_count == 0):
-            try:
-                last_questionnaire_entry = Questionnaire.objects.filter(
+        if user.is_staff:
+            if question_record.gad_7_count == 0 and not question_record.gad_7_completed and not question_record.phq_9_completed:
+                first_question = gad_7_questions()[0]
+                Questionnaire.objects.create(
                     user=user,
-                    gad_7_number=question_record.gad_7_count,
+                    created_at=timezone.now(),
+                    question=first_question,
+                    answer='',
+                    gad_7_number=1,
                     is_gad_7=True,
                     is_phq_9=False
-                ).order_by('created_at').last()
+                )
+                question_record.gad_7_count += 1
+                question_record.save()
+                return JsonResponse({'response': first_question})
 
-
-                if last_questionnaire_entry.answer == '':
-                    last_questionnaire_entry.answer = message
-                    last_questionnaire_entry.save()
-            except Questionnaire.DoesNotExist:
-                pass
-
-        elif question_record.phq_9_count > 0 and not question_record.phq_9_completed:
-            try:
-                last_questionnaire_entry = Questionnaire.objects.filter(
-                    user=user,
-                    phq_9_number=question_record.phq_9_count,
-                    is_gad_7=False,
-                    is_phq_9=True
-                ).order_by('created_at').last()
-
-
-                if last_questionnaire_entry.answer == '':
-                    last_questionnaire_entry.answer = message
-                    last_questionnaire_entry.save()
-            except Questionnaire.DoesNotExist:
-                pass
-
-        if not question_record.gad_7_completed:
-            questions = gad_7_questions()
-            if question_record.gad_7_count <= len(questions):
-                if question_record.gad_7_count < len(questions):
-                    current_question = questions[question_record.gad_7_count]
-
-                    Questionnaire.objects.create(
+            if (question_record.gad_7_count > 0 and not question_record.gad_7_completed) or (
+                    question_record.gad_7_count == 7 and question_record.phq_9_count == 0):
+                try:
+                    last_questionnaire_entry = Questionnaire.objects.filter(
                         user=user,
-                        created_at=timezone.now(),
-                        question=current_question,
-                        answer='',
-                        gad_7_number=question_record.gad_7_count + 1,
+                        gad_7_number=question_record.gad_7_count,
                         is_gad_7=True,
                         is_phq_9=False
-                    )
-                if question_record.gad_7_count < 7:
-                    question_record.gad_7_count += 1
-                    question_record.save()
+                    ).order_by('created_at').last()
 
-                last_questionnaire_entry = Questionnaire.objects.filter(
-                    user=user,
-                    gad_7_number=question_record.gad_7_count,
-                    is_gad_7=True,
-                    is_phq_9=False
-                ).order_by('created_at').last()
 
-                if question_record.gad_7_count == len(questions) and not (last_questionnaire_entry.answer == ''):
+                    if last_questionnaire_entry.answer == '':
+                        last_questionnaire_entry.answer = message
+                        last_questionnaire_entry.save()
+                except Questionnaire.DoesNotExist:
+                    pass
 
-                    question_record.gad_7_completed = True
-                    question_record.save()
-                    return JsonResponse({'message': message,
-                                         'response': 'ممنون از این که به سری اول سوالات پاسخ دادید. حال ممنون می شویم با پاسخ به سوالات مربوط به پرسشنامه سری دوم ما را یاری نمایید. '})
-                return JsonResponse({'message': message, 'response': current_question})
-
-        if not question_record.phq_9_completed:
-            questions = phq_9_questions()
-            if question_record.phq_9_count <= len(questions):
-                if question_record.phq_9_count < len(questions):
-                    current_question = questions[question_record.phq_9_count]
-                    Questionnaire.objects.create(
+            elif question_record.phq_9_count > 0 and not question_record.phq_9_completed:
+                try:
+                    last_questionnaire_entry = Questionnaire.objects.filter(
                         user=user,
-                        created_at=timezone.now(),
-                        question=current_question,
-                        answer='',
-                        phq_9_number=question_record.phq_9_count + 1,
+                        phq_9_number=question_record.phq_9_count,
                         is_gad_7=False,
                         is_phq_9=True
-                    )
-
-                    question_record.phq_9_count += 1
-                    question_record.save()
-
-                last_questionnaire_entry = Questionnaire.objects.filter(
-                    user=user,
-                    phq_9_number=question_record.phq_9_count,
-                    is_gad_7=False,
-                    is_phq_9=True
-                ).order_by('created_at').last()
+                    ).order_by('created_at').last()
 
 
-                if question_record.phq_9_count == len(questions) and not (last_questionnaire_entry.answer == ''):
-                    question_record.phq_9_completed = True
-                    question_record.save()
-                    return JsonResponse({'message': message,
-                                         'response': 'با سپاس فراوان از پاسخگوییتون به سوالات . حال می توانید به ادامه چت با بات بپردازید.'})
+                    if last_questionnaire_entry.answer == '':
+                        last_questionnaire_entry.answer = message
+                        last_questionnaire_entry.save()
+                except Questionnaire.DoesNotExist:
+                    pass
 
-                return JsonResponse({'message': message, 'response': current_question})
+            if not question_record.gad_7_completed:
+                questions = gad_7_questions()
+                if question_record.gad_7_count <= len(questions):
+                    if question_record.gad_7_count < len(questions):
+                        current_question = questions[question_record.gad_7_count]
+
+                        Questionnaire.objects.create(
+                            user=user,
+                            created_at=timezone.now(),
+                            question=current_question,
+                            answer='',
+                            gad_7_number=question_record.gad_7_count + 1,
+                            is_gad_7=True,
+                            is_phq_9=False
+                        )
+                    if question_record.gad_7_count < 7:
+                        question_record.gad_7_count += 1
+                        question_record.save()
+
+                    last_questionnaire_entry = Questionnaire.objects.filter(
+                        user=user,
+                        gad_7_number=question_record.gad_7_count,
+                        is_gad_7=True,
+                        is_phq_9=False
+                    ).order_by('created_at').last()
+
+                    if question_record.gad_7_count == len(questions) and not (last_questionnaire_entry.answer == ''):
+
+                        question_record.gad_7_completed = True
+                        question_record.save()
+                        return JsonResponse({'message': message,
+                                            'response': 'ممنون از این که به سری اول سوالات پاسخ دادید. حال ممنون می شویم با پاسخ به سوالات مربوط به پرسشنامه سری دوم ما را یاری نمایید. '})
+                    return JsonResponse({'message': message, 'response': current_question})
+
+            if not question_record.phq_9_completed:
+                questions = phq_9_questions()
+                if question_record.phq_9_count <= len(questions):
+                    if question_record.phq_9_count < len(questions):
+                        current_question = questions[question_record.phq_9_count]
+                        Questionnaire.objects.create(
+                            user=user,
+                            created_at=timezone.now(),
+                            question=current_question,
+                            answer='',
+                            phq_9_number=question_record.phq_9_count + 1,
+                            is_gad_7=False,
+                            is_phq_9=True
+                        )
+
+                        question_record.phq_9_count += 1
+                        question_record.save()
+
+                    last_questionnaire_entry = Questionnaire.objects.filter(
+                        user=user,
+                        phq_9_number=question_record.phq_9_count,
+                        is_gad_7=False,
+                        is_phq_9=True
+                    ).order_by('created_at').last()
+
+
+                    if question_record.phq_9_count == len(questions) and not (last_questionnaire_entry.answer == ''):
+                        question_record.phq_9_completed = True
+                        question_record.save()
+                        return JsonResponse({'message': message,
+                                            'response': 'با سپاس فراوان از پاسخگوییتون به سوالات . حال می توانید به ادامه چت با بات بپردازید.'})
+
+                    return JsonResponse({'message': message, 'response': current_question})
 
         # Regular chat processing
         chats = Chat.objects.filter(user=user)
