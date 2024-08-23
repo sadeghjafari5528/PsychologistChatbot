@@ -50,6 +50,7 @@ def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: fl
 
 
 def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
+    chat_history_size = len(chat_history)
     if window_size:
         chat_history = chat_history.order_by('-id')[:window_size]
 
@@ -58,10 +59,11 @@ def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
         messages.append({"role": "user", "content": chat.message})
         messages.append({"role": "system", "content": chat.response})
 
-    average_emotion_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'emotion')
-    average_disorder_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'disorder')
+    if chat_history_size > 3:
+        average_emotion_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'emotion')
+        average_disorder_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'disorder')
 
-    prompt = f"""
+        prompt = f"""
 The previous messages are the chat history between a patient and a psychologist.
 Suppose you are a professional psychologist. Based on the following information,
 respond to the patient with a short message.(Prevent to say 'Hi' in each message. And only speak in persian)
@@ -70,11 +72,19 @@ Emotional status: {average_emotion_prob}
 Mental disorder status: {average_disorder_prob}
 Patient message: {chat_obj.message}
 """
-    print(prompt)
+    else:
+        prompt = f"""
+The previous messages are the chat history between a patient and a psychologist.
+Suppose you are a professional psychologist. Based on the following information,
+respond to the patient with a short message.(Prevent to say 'Hi' in each message. And only speak in persian)
+
+Patient message: {chat_obj.message}
+"""
+
     messages.append({"role": "user", "content": prompt})
 
     response = openai.ChatCompletion.create(
-        model="gpt-4-turbo",
+        model="gpt-4o-mini-2024-07-18",
         # prompt = message,
         # max_tokens=150,
         # n=1,
