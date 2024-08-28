@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-import logging
+# import logging
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -16,7 +16,7 @@ from .models import Chat, Question, Questionnaire
 
 from chatbot.disorder_detector.stress_detector import check_for_stress_in_text, load_stress_detector_model_tokenizer
 from chatbot.emotion.emotion_detection import load_emotion_detector_model_tokenizer, predict_emotion_label, \
-    predict_emotion_of_texts
+    predict_emotion_of_texts, label_dict
 from chatbot.message_validator.message_validator import load_validator_model_and_tokenizer, predict_validator_labels
 
 from dotenv import load_dotenv
@@ -24,13 +24,36 @@ import os
 
 load_dotenv()
 
+cooperation_text = """
+ما یه تیم هستیم متشکل از دوتا روانشناس و 5 متخصص هوش مصنوعی 
+این چت بات رو طراحی کردیم با هدف …
+و برامون خیلی مهمه که این چت بات بتونه اثر بخش باشه، برای همین از شما کمک میخوایم، 
+
+چه کمکی؟ 
+
+کاری که باید بکنید اینه که در مجموع ۳ نوبت پرسشنامه پر بکنید 
+و روزی ۱۰ الی ۱۵ دقیقه هم از چت بات استفاده کنید و سعی کنید در زمینه افسردگی ازش کمک بگیرید.
+و کل این فرایند فقط ۲ هفته طول میکشه. 
+
+واما شما چی به دست میارین؟
+
+میتونین به صورت رایگان از جلسات درمانی که براتون گذاشته میشه استفاده بکنید.
+
+
+پس اگر به مدت ۲ هفته میتونین روزی ۱۰ الی ۱۵ دقیقه زمان بزارین، 
+برای اطلاعات بیشتر:
+به من در تلگرام با ای دی  sadeghjafari1379 پیام بدید یا در لینکدین با من در ارتباط باشید.
+
+💢فقط یه نکته ۴ روز بیشتر فرصت ندارین تا تصمیمتون رو به ما اعلام کنید.
+"""
+
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 validator_model, validator_tokenizer = load_validator_model_and_tokenizer()
 emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
-logger = logging.getLogger('django')
+# logger = logging.getLogger('django')
 
 
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
@@ -40,6 +63,8 @@ def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: fl
         total_weight = 0
         weighted_scores = list()
         for chat in chats:
+            if chat.response == cooperation_text:
+                continue
             day_diff = (timezone.now() - chat.created_at).days
             weight = np.exp(-decay_factor * day_diff)
             weighted_scores.append(getattr(chat, feature)[label] * weight)
@@ -84,7 +109,7 @@ Patient message: {chat_obj.message}
     messages.append({"role": "user", "content": prompt})
 
     response = openai.ChatCompletion.create(
-        model="gpt-4o-mini-2024-07-18",
+        model="gpt-4o-2024-08-06",
         # prompt = message,
         # max_tokens=150,
         # n=1,
@@ -127,7 +152,19 @@ def chatbot(request):
     if not user.is_authenticated:
         return redirect('login')
 
-
+    if not Chat.objects.filter(response=cooperation_text, user=user).exists():
+        chat = Chat(
+            user=user,
+            message='',
+            response=cooperation_text,
+            created_at=timezone.now(),
+            emotion={v:0 for v in label_dict.values()},
+            disorder={"Not Stressed": 0, "Stressed": 0},
+            validation=[],
+            gad_7=False,
+            phq_9=False,
+        )
+        chat.save()
     today = timezone.now().date()
     question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
 
@@ -269,13 +306,12 @@ def chatbot(request):
             validation = predict_validator_labels(response, validator_model, validator_tokenizer)
             if not validation:
                 break
-            logger.info(f"Response-text:{response}\nvalidation list:{validation}\n ")
+            # logger.info(f"Response-text:{response}\nvalidation list:{validation}\n ")
 
         chat.validation = validation
         chat.response = response
         chat.save()
         return JsonResponse({'message': message, 'response': response})
-
     return render(request, 'chatbot.html', {'chats': Chat.objects.filter(user=user)})
 
 
