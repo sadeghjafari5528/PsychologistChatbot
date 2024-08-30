@@ -14,6 +14,7 @@ from django.contrib import auth
 from django.contrib.auth.models import User
 from .models import Chat, Question, Questionnaire
 
+# Import various models and utilities for the chatbot's functionality
 from chatbot.disorder_detector.stress_detector import check_for_stress_in_text, load_stress_detector_model_tokenizer
 from chatbot.emotion.emotion_detection import load_emotion_detector_model_tokenizer, predict_emotion_label, \
     predict_emotion_of_texts, label_dict
@@ -24,32 +25,33 @@ import os
 
 load_dotenv()
 
+# Cooperation text that will be used in the chatbot response
 cooperation_text = """
-    ما یه تیم هستیم متشکل از دوتا روانشناس و 5 متخصص هوش مصنوعی 
-    این چت بات رو طراحی کردیم با هدف …
-    و برامون خیلی مهمه که این چت بات بتونه اثر بخش باشه، برای همین از شما کمک میخوایم، 
+ما یه تیم هستیم متشکل از دوتا روانشناس و 5 متخصص هوش مصنوعی 
+این چت بات رو طراحی کردیم با هدف …
+و برامون خیلی مهمه که این چت بات بتونه اثر بخش باشه، برای همین از شما کمک میخوایم، 
 
-    چه کمکی؟ 
+چه کمکی؟ 
 
-    کاری که باید بکنید اینه که در مجموع ۳ نوبت پرسشنامه پر بکنید 
-    و روزی ۱۰ الی ۱۵ دقیقه هم از چت بات استفاده کنید و سعی کنید در زمینه افسردگی ازش کمک بگیرید.
-    و کل این فرایند فقط ۲ هفته طول میکشه. 
+کاری که باید بکنید اینه که در مجموع ۳ نوبت پرسشنامه پر بکنید 
+و روزی ۱۰ الی ۱۵ دقیقه هم از چت بات استفاده کنید و سعی کنید در زمینه افسردگی ازش کمک بگیرید.
+و کل این فرایند فقط ۲ هفته طول میکشه. 
 
-    واما شما چی به دست میارین؟
+واما شما چی به دست میارین؟
 
-    میتونین به صورت رایگان از جلسات درمانی که براتون گذاشته میشه استفاده بکنید.
+میتونین به صورت رایگان از جلسات درمانی که براتون گذاشته میشه استفاده بکنید.
 
 
-    پس اگر به مدت ۲ هفته میتونین روزی ۱۰ الی ۱۵ دقیقه زمان بزارین، 
-    برای اطلاعات بیشتر:
-    <br> به من در تلگرام  پیام بدید یا در لینکدین با من در ارتباط باشید.
-    <br> @sadeghjafari1379
+پس اگر به مدت ۲ هفته میتونین روزی ۱۰ الی ۱۵ دقیقه زمان بزارین، 
+برای اطلاعات بیشتر:
+به من در تلگرام @sadeghjafari1379 پیام بدید یا در لینکدین با من در ارتباط باشید.
 
-    <br> 💢فقط یه نکته ۴ روز بیشتر فرصت ندارین تا تصمیمتون رو به ما اعلام کنید.
+💢فقط یه نکته ۴ روز بیشتر فرصت ندارین تا تصمیمتون رو به ما اعلام کنید.
 """
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
 
+# Load OpenAI API key and models for emotion, stress, and validation detection
+openai.api_key = os.getenv('OPENAI_API_KEY')
 validator_model, validator_tokenizer = load_validator_model_and_tokenizer()
 emotion_model, emotion_tokenizer = load_emotion_detector_model_tokenizer()
 disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
@@ -57,13 +59,16 @@ disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 # logger = logging.getLogger('django')
 
 
+# Function to calculate the weighted average of emotion or disorder over the chat history
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
-    chats = [chat for chat in chats if chat.message != '']
     weighted_average = dict()
 
+    # Iterate over each label in the first chat's feature (emotion/disorder)
     for label in getattr(chats[0], feature).keys():
         total_weight = 0
         weighted_scores = list()
+
+        # Calculate weighted score for each chat based on the time elapsed
         for chat in chats:
             if chat.response == cooperation_text:
                 continue
@@ -72,20 +77,26 @@ def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: fl
             weighted_scores.append(getattr(chat, feature)[label] * weight)
             total_weight += weight
 
+        # Calculate the weighted average
         weighted_average[label] = sum(weighted_scores) / total_weight if total_weight != 0 else 0
     return weighted_average
 
 
+# Function to interact with OpenAI API to get a response based on chat history and patient message
 def ask_openai(chat_obj: Chat, chat_history, window_size: int = None):
     chat_history_size = len(chat_history)
     if window_size:
         chat_history = chat_history.order_by('-id')[:window_size]
 
     messages = list()
+
+    # Prepare the chat history to be sent to OpenAI
     for chat in chat_history:
         messages.append({"role": "user", "content": chat.message})
         messages.append({"role": "system", "content": chat.response})
 
+
+    # If there are more than 3 chats, include emotional and disorder statuses in the prompt
     if chat_history_size > 3:
         average_emotion_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'emotion')
         average_disorder_prob = calculate_weighted_average(list(chat_history) + [chat_obj], 'disorder')
@@ -98,11 +109,10 @@ respond to the patient with a short message.(Prevent to say 'Hi' in each message
 Emotional status: {average_emotion_prob}
 Mental disorder status: {average_disorder_prob}
 Patient message: {chat_obj.message}
-
-Speak more sincerely and informaly and never tell the user what her/him stress and emotion level is like and don't speak about it,
-only know it to answer properly.
 """
     else:
+
+        # If chat history is small, only include the patient message
         prompt = f"""
 The previous messages are the chat history between a patient and a psychologist.
 Suppose you are a professional psychologist. Based on the following information,
@@ -113,6 +123,7 @@ Patient message: {chat_obj.message}
 
     messages.append({"role": "user", "content": prompt})
 
+    # Request response from OpenAI
     response = openai.ChatCompletion.create(
         model="gpt-4o-2024-08-06",
         # prompt = message,
@@ -139,6 +150,7 @@ def gad_7_questions():
 
 
 def phq_9_questions():
+    # PHQ-9 questions related to depression symptoms
     return [
           """
     در طول دو هفته گذشته، چند بار احساس کرده‌اید که علاقه یا لذتی به فعالیت‌هایی که معمولاً از آنها لذت می‌بردید، ندارید؟ 
@@ -225,6 +237,7 @@ def chatbot(request):
     if not user.is_authenticated:
         return redirect('login')
 
+    # Send cooperation text if the user hasn't received it yet
     if not Chat.objects.filter(response=cooperation_text, user=user).exists():
         chat = Chat(
             user=user,
@@ -239,10 +252,20 @@ def chatbot(request):
         )
         chat.save()
     today = timezone.now().date()
-    question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
+
+    # Fetch the last question record, or create one if it doesn't exist
+    question_record = Question.objects.filter(user=user).order_by('-created_at').first()
+    if not question_record:
+        question_record = Question.objects.create(user=user)
+
+    # Check if it's time for a new questionnaire (weekly)
+    if (timezone.now() - question_record.created_at).days >= 7:
+        question_record, created = Question.objects.get_or_create(user=user, created_at__date=today)
 
     if request.method == 'POST':
         message = request.POST.get('message')
+
+        # If the user is staff, handle the PHQ-9 questionnaire
         if user.is_staff:
             if question_record.phq_9_count == 0 and not question_record.phq_9_completed:
                 first_question = phq_9_questions()[0]
@@ -310,6 +333,7 @@ def chatbot(request):
                     return JsonResponse({'message': message, 'response': current_question})
 
         # Regular chat processing
+        # Predict the emotion and stress levels for the message
         chats = Chat.objects.filter(user=user)
         disorder = check_for_stress_in_text(message, disorder_model, disorder_tokenizer)
         emotion = predict_emotion_label(message, emotion_model, emotion_tokenizer)
@@ -324,6 +348,7 @@ def chatbot(request):
         )
 
         for _ in range(5):
+            # Get a response from OpenAI based on the chat history and current message
             response = ask_openai(chat, chat_history=chats, window_size=20)
             validation = predict_validator_labels(response, validator_model, validator_tokenizer)
             if not validation:
