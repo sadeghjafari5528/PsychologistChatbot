@@ -61,6 +61,7 @@ disorder_tokenizer, disorder_model = load_stress_detector_model_tokenizer()
 
 # Function to calculate the weighted average of emotion or disorder over the chat history
 def calculate_weighted_average(chats: list[Chat], feature: str, decay_factor: float = 0.9):
+    chats = [chat for chat in chats if chat.message != '']
     weighted_average = dict()
 
     # Iterate over each label in the first chat's feature (emotion/disorder)
@@ -109,6 +110,9 @@ respond to the patient with a short message.(Prevent to say 'Hi' in each message
 Emotional status: {average_emotion_prob}
 Mental disorder status: {average_disorder_prob}
 Patient message: {chat_obj.message}
+
+Speak more sincerely and informaly and never tell the user what her/him stress and emotion level is like and don't speak about it,
+only know it to answer properly.
 """
     else:
 
