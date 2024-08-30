@@ -1,5 +1,7 @@
 .idea
 
+backups/
+data/
 nohup.out
 
 # Byte-compiled / optimized / DLL files
