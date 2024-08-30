@@ -111,7 +111,7 @@ Emotional status: {average_emotion_prob}
 Mental disorder status: {average_disorder_prob}
 Patient message: {chat_obj.message}
 
-Speak more sincerely and informaly and never tell the user what her/him stress and emotion level is like and don't speak about it,
+Speak more sincerely and informal land use emojis to have more friendly talk. and never tell the user what her/him stress and emotion level is like and don't speak about it,
 only know it to answer properly.
 """
     else:
