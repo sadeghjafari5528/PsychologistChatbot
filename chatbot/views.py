@@ -125,7 +125,7 @@ Patient message: {chat_obj.message}
 
     # Request response from OpenAI
     response = openai.ChatCompletion.create(
-        model="gpt-4o-2024-08-06",
+        model="gpt-4o-mini-2024-07-18",
         # prompt = message,
         # max_tokens=150,
         # n=1,
