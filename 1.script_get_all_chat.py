@@ -9,13 +9,14 @@ import csv
 from chatbot.models import Chat  # Replace 'your_app_name' with the actual name of your app
 
 # Fetch all Chat records, sorted by username and creation time
-chats = Chat.objects.select_related('user').exclude(message='').order_by('user__username', 'created_at')
+chats = Chat.objects.select_related('user').filter(user__is_staff=True).exclude(message='').order_by('user__username', 'created_at')
 
 # Define the CSV file path
-csv_file_path = 'data/chats.csv'
+csv_file_path = 'data/staff_chats.csv'
 
 # Define CSV header
 header = [
+    'user_id',
     'username',
     'created_at',
     'message', 
@@ -35,6 +36,7 @@ with open(csv_file_path, 'w', newline='', encoding='utf-8-sig') as csvfile:
     # Write the chat data
     for chat in chats:
         writer.writerow([
+            chat.user.id,
             chat.user.username,
             chat.created_at,
             chat.message,
